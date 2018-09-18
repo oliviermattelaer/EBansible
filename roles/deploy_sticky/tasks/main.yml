@@ -1,0 +1,7 @@
+#tasks:
+   #
+   # installing license and foss toolchain
+   # 
+   - include: install_mcr.yml
+     tags: ['mcr']
+

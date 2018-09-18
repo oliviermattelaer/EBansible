@@ -1,0 +1,63 @@
+#
+# 
+#
+
+    # FIX ME ! (HMEM: fail to install pip from yum since pip more recent than yum version)
+    #
+    # Install pip
+    #
+    - name: install package for lmod/lua
+      package: 
+          name: "{{ item }}" 
+          state: latest
+      with_items:
+        - epel-release
+        - lua
+        - lua-posix
+        - lua-filesystem
+        - lua-devel
+        - unzip
+        - bzip2
+        - Lmod
+            
+    - name: Extract Lmod-7.7.tar.bz2
+      unarchive:
+        src: Lmod-7.7.tar.bz2
+        dest: /tmp
+
+    - name: Create directory for lmod (/opt/apps)
+      file: name={{ item }} state=directory  mode=01775
+      with_items:
+        - "/opt/apps"
+#
+#
+    - name: Running the installation of lmod part1
+      shell: ./configure --prefix=/opt/apps && make install chdir=/tmp/Lmod-7.7 creates=/opt/apps/lmod/lmod/lib/term/core.so
+
+#    - name: put lmod in the configuration file 
+#      file:
+#        src: /usr/share/lmod/6.5.1/init/profile
+#        dest: /etc/profile.d/z00_lmod.sh
+#        owner: root
+#        group: root
+#        state: link
+
+    - name: put lmod in the configuration file
+      file:
+        src: /opt/apps/lmod/lmod/init/profile
+        dest: /etc/profile.d/z00_lmod.sh
+        owner: root
+        group: root
+        state: link
+
+#    - name: ensure that lmod env variable is in path
+#      lineinfile:
+#         path: /usr/share/lmod/6.5.1/init/bash
+#         line: "export PATH=$PATH:/usr/share/lmod/lmod/libexec"
+#         state: present
+
+    - name: ensure that lmod env variable is in path
+      lineinfile:
+        path: /usr/share/lmod/6.5.1/init/bash
+        line: "export PATH=$PATH:/opt/apps/lmod/lmod/libexec"
+        state: present

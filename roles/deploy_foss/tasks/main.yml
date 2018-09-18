@@ -1,0 +1,8 @@
+#tasks:
+   #
+   # installing license and foss toolchain
+   # 
+   - include: install_foss.yml
+     tags: ['foss_only']
+   - include: program_based_on_foss.yml
+     tags: ['foss_suite']

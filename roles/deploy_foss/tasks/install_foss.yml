@@ -1,0 +1,126 @@
+#tasks:
+
+    #
+    # Handle the license
+    #
+
+    #- name: Create directory for saving the license
+    #  file: name={{ item }} state=directory owner={{ easybuild_user }}
+    #  with_items:
+    #    - "~{{ easybuild_user }}/licenses/intel"
+
+    #- name: Upload Intel licence file
+    #  copy: dest=~{{ easybuild_user }}/licenses/intel src=license.lic  owner={{ easybuild_user }}
+
+    #
+    # OS dependencies of foss toolchain
+    #
+
+    - name: Install OS dependencies of foss toolchain
+      package: name={{ item }}
+      with_items:
+       - libibverbs-devel
+       - patch
+       - gcc-c++
+       - openssl-devel
+       - perl-Thread-Queue #ONLY for centos7
+#       - libssl-dev
+#       - libopenssl-devel
+
+    - name: Create foss directory for software,modules,source
+      file: name={{ item }} state=directory owner={{ easybuild_user }}
+      with_items:
+        - "{{ prefix_eb }}"
+        - "{{ prefix_eb}}/{{ foss }}"
+        - "{{ prefix_eb}}/{{ foss }}/software"
+        - "{{ prefix_eb }}/{{ foss }}/modules"
+        - "{{ prefix_eb }}/{{ foss }}/modules_hierarchical"
+        - "{{ prefix_eb }}/{{ foss }}/sources"
+        - "{{ prefix_priv_eb}}/{{ foss }}"
+        - "{{ prefix_priv_eb}}/{{ foss }}/software"
+        - "{{ prefix_priv_eb }}/{{ foss }}/modules"
+        - "{{ prefix_priv_eb }}/{{ foss }}/modules_hierarchical"
+        - "{{ prefix_priv_eb }}/{{ foss }}/sources"
+        - "{{ prefix_eb }}/sources"
+
+    - name: control salt template for MODULEFULLPATH
+      lineinfile:
+        name: "/srv/salt/nfssoft/new_modules.sh" 
+        line: "{{item}}"
+      with_items:
+          - "export MODULEPATHFULL=$MODULEPATHFULL:{{ prefix_eb }}/{{ foss }}/modules/all" 
+          - "export MODULEPATHFULL=$MODULEPATHFULL:{{ prefix_priv_eb }}/{{ foss }}/modules/all" 
+      delegate_to: "{{delegate_salt}}"
+
+    - name: get eb config files to run in this specific foss/intel version
+      ini_file: 
+         dest: "{{ prefix_eb}}/{{ foss }}/config.cfg" 
+         section: "{{item.section }}"
+         option: "{{ item.option }}"
+         value: "{{ item.value }}"
+      with_items:
+       - { section: 'config', option: 'installpath-modules', value: "{{ prefix_eb }}/{{ foss }}/modules"}
+       - { section: 'config', option: 'installpath-software', value: "{{ prefix_eb }}/{{ foss }}/software"}
+       - { section: 'config', option: 'sourcepath', value: "{{ prefix_eb }}/sources"}
+       - { section: 'config', option: 'robot-paths', value: '{{ prefix_eb }}/{{ foss }}/sources/eb_files:/usr/easybuild/easyconfigs'}
+    # 
+    # Before running the installation of foss we need to install OpenMPI
+    # For OpenMPI, we need to modify the easyconfig file to add the slurm support.
+    #
+    #
+    # idea from fred. -> create a config.cfg inside {{ prefix_eb }}/{{ foss }}
+    #  to specify installpath_XXX (he then use --configfile option
+    #  include robot-path.
+    # Need to change the source
+    - name: run the installation of OpenMPI via eb with slurm support
+      easybuild:
+        installpath_modules: '{{ prefix_eb }}/{{ foss }}/modules'
+        installpath_software: '{{ prefix_eb }}/{{ foss }}/software'
+        installpath_source: '{{ prefix_eb }}/sources'
+        robot: 'false'
+        special_edit: 'edit_openmpi_for_slurm'
+        special_edit_parameters: 'foss-{{ foss }}.eb'
+        keep_std: 'True'
+#        additional_options : ' -D '
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ foss }}/modules/all/"
+      notify: spidercache
+    #
+    # continue the installation of foss from OpenMPI stage
+    #
+    - name: run the installation of foss via eb
+      easybuild:
+        package: 'foss-{{ foss }}.eb'
+        #additional_options: '--dry-run'
+        installpath_modules: '{{ prefix_eb }}/{{ foss }}/modules'
+        installpath_software: '{{ prefix_eb }}/{{ foss }}/software'
+        installpath_source: '{{ prefix_eb }}/sources'
+        keep_std: yes
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ foss }}/modules/all/"
+      notify: spidercache
+
+
+    - name: instalation of OSU package version 5.3.2
+      easybuild:
+           installpath_modules: '{{ prefix_eb }}/{{ foss }}/modules'
+           installpath_software: '{{ prefix_eb }}/{{ foss }}/software'
+           installpath_source: '{{ prefix_eb }}/sources'
+           keep_std: yes 
+           search_eb: 'True'
+           search_package: "OSU"
+           search_version: "5.3.2"
+           search_toolchain: "foss,{{ foss }}"
+           strict_search: "false"
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ foss }}/modules/all"
+      notify: spidercache

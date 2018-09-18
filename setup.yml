@@ -1,0 +1,5 @@
+
+- hosts: easybuild
+  roles:
+     - setup_cecisw
+

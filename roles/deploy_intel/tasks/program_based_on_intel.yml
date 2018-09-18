@@ -1,0 +1,125 @@
+
+    - name: Install OS dependencies of foss toolchain
+      package: name={{ item }}
+      with_items:
+       - openssl-devel
+#       - libssl-dev
+#       - libopenssl-devel
+
+    - name: copy eb file
+      copy: dest="{{ prefix_eb }}/{{ intel }}/sources/eb_files" src={{ item }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "{{ intel }}/*.eb"
+
+
+    #- name: run the installation of program depending of intel
+    #  easybuild:
+    #       installpath_modules: '{{ prefix_eb }}/{{ intel }}/modules'
+    #       installpath_software: '{{ prefix_eb }}/{{ intel }}/software'
+    #       installpath_source: '{{ prefix_eb }}/sources'
+    #       keep_std: yes 
+    #       search_eb: 'True'
+    #       search_package: "{{ item }}"
+    #       search_toolchain: "intel,{{ intel }}"
+    #       strict_search: "{{ strict_search}}"
+    #  become: yes
+    #  become_user: "{{ easybuild_user }}"
+    #  environment:
+    #      PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+    #      MODULEPATH: "{{ prefix_eb }}/{{ intel }}/modules/all"
+    #  notify: spidercache
+    #  with_items:
+    #    - qgis
+    #  tags:
+    #    - qgis
+
+    # - name: run the installation of program depending of intel
+    #   easybuild:
+    #        installpath_modules: '{{ prefix_eb }}/{{ intel }}/modules'
+    #        installpath_software: '{{ prefix_eb }}/{{ intel }}/software'
+    #        installpath_source: '{{ prefix_eb }}/sources'
+    #        keep_std: yes 
+    #        package: "{{ item }}"	   
+    #        search_eb: 'False'
+    #        search_package: "{{ item }}"
+    #        search_toolchain: "intel,{{ intel }}"
+    #        strict_search: "{{ strict_search}}"
+    #   become: yes
+    #   become_user: "{{ easybuild_user }}"
+    #   environment:
+    #       PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+    #       MODULEPATH: "{{ prefix_eb }}/{{ intel }}/modules/all"
+    #   notify: spidercache
+    #   with_items:
+    #      - LibUUID-1.0.3-intel-2017b.eb
+    #      - ANTLR-2.7.7-intel-2017b.eb
+    #      - UDUNITS-2.2.25-intel-2017b.eb
+    #      - libdap-3.19.1-intel-2017b.eb
+    #      - UDUNITS-2.2.26-intel-2017b.eb
+    #      - FFTW-3.3.6-intel-2017b.eb
+    #      - NAMD-2.9-intel-2017b-mpi.eb
+    #      - NAMD-2.12-intel-2017b-mpi.eb
+    #      - ncview-2.1.7-intel-2017b/eb
+    #      - netCDF-Fortran-4.4.4-intel-2017b-HDF5-1.8.19.eb
+    #      - NCO-4.7.1-intel-2017b.eb
+    #      - netCDF-Fortran-4.4.4-intel-2017b.eb
+
+
+    - name: run the installation of program depending of intel
+      easybuild:
+           installpath_modules: '{{ prefix_eb }}/{{ intel }}/modules'
+           installpath_software: '{{ prefix_eb }}/{{ intel }}/software'
+           installpath_source: '{{ prefix_eb }}/sources'
+           keep_std: yes 
+           search_eb: 'True'
+           search_package: "{{ item }}"
+           search_toolchain: "intel,{{ intel }}"
+           strict_search: "{{ strict_search}}"
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ intel }}/modules/all"
+      notify: spidercache
+      with_items:
+        - ABINIT
+        - netCDF
+        - netCDF-Fortran
+        - netCDF-C++4
+#        - NCO
+#        - ncview
+        - Boost
+        - Ruby
+        - Perl
+        - Python
+        - git
+        - libjpeg-turbo
+        - openjpeg
+        - grib_api
+        - UDUNITS
+        - YAXT
+        - CDO
+        - NASM
+        - HDF5
+        - Szip
+        - icc
+        - BLACS
+        - cuda
+        - GEOS
+        - gettext
+        - gflags
+        - GLib
+        - glog
+        - IMB
+        - Java
+        - LAPACK
+        - OpenCV
+        - parallel
+        - ParaView
+        - plink
+        - protobuf
+        - Qt
+        - SCOTCH
+        - texinfo
+
+

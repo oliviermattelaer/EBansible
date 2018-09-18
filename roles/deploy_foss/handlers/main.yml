@@ -1,0 +1,7 @@
+   #
+   #  Automount service
+   #
+   - name: rebuild lmod cache
+     delegate_to: "{{ delegate_lmod_cache }}"
+     shell: update_lmod_system_cache_files $MODULEPATHFULL 
+     listen: "spidercache"

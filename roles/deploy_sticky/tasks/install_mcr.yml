@@ -1,0 +1,29 @@
+
+
+    - name: run the installation of MCR program
+      easybuild:
+           package: "{{ item }}"
+           installpath_modules: '{{ prefix_private }}/arch/easybuild/sticky/modules'
+           installpath_software: '{{ prefix_private }}/arch/easybuild/sticky/software'
+           installpath_source: '{{ prefix_sources }}'
+           robot: False 
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ foss }}/modules/all"
+      notify: spidercache
+      tags:
+        - MCR
+      with_items:
+        - MCR-R2013a.eb
+        - MCR-R2013b.eb
+        - MCR-R2014a.eb
+        - MCR-R2014b.eb
+        - MCR-R2015a.eb
+        - MCR-R2015b.eb
+        - MCR-R2016a.eb
+        - MCR-R2016b.eb
+        - MCR-R2017a.eb
+        - MCR-R2017b.eb
+        - MCR-R2018a.eb

@@ -1,0 +1,142 @@
+#tasks:
+
+    #
+    # Handle the license
+    #
+
+    - name: Create directory for saving the license
+      file: name={{ item }} state=directory owner={{ easybuild_user }}
+      with_items:
+        - "~{{ easybuild_user }}/licenses/intel"
+      tags:
+        - "prepa_intel"
+
+    - name: Upload Intel licence file
+      copy: dest=~{{ easybuild_user }}/licenses/intel src={{ item }}  owner={{ easybuild_user }}
+      with_items:
+        - "license.lic"
+        - "licenses.lic"
+      tags:
+        - "prepa_intel"
+
+    - name: create scratch directory for tmpdir
+      file: path="/scratch/localsoft" state=directory owner="{{ easybuild_user }}"
+
+    #
+    # OS dependencies of foss toolchain
+    #
+
+    #- name: Install OS dependencies of foss toolchain
+    #  package: name={{ item }}
+    #  with_items:
+    #   - libibverbs-devel
+    #   - patch
+
+    - name: copy file for parralel studio (c++)
+      copy: dest="{{ prefix_eb }}/sources/i/icc/" src={{ item }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "parallel_studio_xe_*_composer_edition_for_cpp*.tgz"
+        - "{{ intel }}/parallel_studio_xe_*_composer_edition_for_cpp*.tgz"
+      tags:
+        - "prepa_intel"
+
+    - name: copy file for parralel studio (fortran)
+      copy: dest="{{ prefix_eb }}/sources/i/ifort/" src={{ item }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "parallel_studio_xe_*_composer_edition_for_fortran*.tgz"
+        - "{{ intel }}/parallel_studio_xe_*_composer_edition_for_fortran*.tgz"
+      tags:
+        - "prepa_intel"
+
+    - name: copy file for parralel studio (mpi)
+      copy: dest="{{ prefix_eb }}/sources/i/impi/" src={{ item }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "l_mpi_*.tgz"
+        - "{{ intel }}/l_mpi_*.tgz"
+      tags:
+        - "prepa_intel"
+
+    - name: copy file for parralel studio (mpi)
+      copy: dest="{{ prefix_eb }}/sources/i/imkl/" src={{ item }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "l_mkl_*.tgz"
+        - "{{ intel }}/l_mkl_*.tgz"
+      tags:
+        - "prepa_intel"
+
+    - name: Create foss/intel directory for software,modules,source
+      file: name={{ item }} state=directory owner={{ easybuild_user }}
+      with_items:
+        - "{{ prefix_eb }}"
+        - "{{ prefix_eb}}/{{ intel }}/software"
+        - "{{ prefix_eb }}/{{ intel }}/modules"
+        - "{{ prefix_eb }}/{{ intel }}/modules_hierarchical"
+        - "{{ prefix_eb }}/{{ intel }}/sources"
+        - "{{ prefix_eb }}/{{ intel }}/sources/eb_files"
+      tags:
+        - "prepa_intel"
+
+    - name: copy eb file
+      copy: dest="{{ prefix_eb }}/{{ intel }}/sources/eb_files" src={{ item }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "{{ intel }}/*.eb"
+        - "*.eb"
+      tags:
+        - "prepa_intel"
+
+    - name: get eb config files to run in this specific foss/intel version
+      ini_file: 
+         dest: "{{ prefix_eb}}/{{ intel }}/config.cfg" 
+         section: "{{item.section }}"
+         option: "{{ item.option }}"
+         value: "{{ item.value }}"
+      with_items:
+       - { section: 'config', option: 'installpath-modules', value: '{{ prefix_eb }}/{{ intel }}/modules'}
+       - { section: 'config', option: 'installpath-software', value: '{{ prefix_eb }}/{{ intel }}/software'}
+       - { section: 'config', option: 'sourcepath', value: '{{ prefix_eb }}/sources'}
+       - { section: 'config', option: 'robot-paths', value: '{{ prefix_eb }}/{{ intel }}/sources/eb_files:/usr/easybuild/easyconfigs'}
+      tags:
+        - "prepa_intel"
+    #
+    # continue the installation of intel
+    #
+    - name: run the installation of intel via eb
+      easybuild:
+        package: 'intel-{{ intel }}.eb'
+        additional_options: '--amend=license-file={{ intel_license }}/license.lic'
+#        additional_options: '--amend=license-file={{ intel_license }}/license.lic -D'
+        installpath_modules: '{{ prefix_eb }}/{{ intel }}/modules'
+        installpath_software: '{{ prefix_eb }}/{{ intel }}/software'
+        installpath_source: '{{ prefix_eb }}/sources'
+        keep_std: yes
+        #this was for srun but it makes mpirun to crash
+        #special_edit: special_amend
+        #special_edit_parameters: "{'name':'intel-{{ intel }}', 'toolchain':'intel-{{ intel }}', 'var':['modextravars'], 'value': ['{\"I_MPI_PMI_LIBRARY\": \"/usr/lib64/libpmi.so\"}']}"
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULESPATH: "{{ prefix_eb }}/{{ intel }}/modules/all"
+          TMPDIR: /scratch/localsoft
+      tags:
+         - intel_only
+         - eb_intel
+      notify: spidercache
+
+    - name: instalation of OSU package version 5.3.2
+      easybuild:
+           installpath_modules: '{{ prefix_eb }}/{{ intel }}/modules'
+           installpath_software: '{{ prefix_eb }}/{{ intel }}/software'
+           installpath_source: '{{ prefix_eb }}/sources'
+           keep_std: yes 
+           search_eb: 'True'
+           search_package: "OSU"
+           search_version: "5.3.2"
+           search_toolchain: "intel,{{ intel }}"
+           strict_search: "false"
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ intel }}/modules/all"
+      notify: spidercache

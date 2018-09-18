@@ -1,0 +1,58 @@
+#tasks:
+#
+    #
+    # Handle OS dependencies
+    ##
+#
+    #- name: Install OS dependencies of foss toolchain
+    #  package: name={{ item }}
+    #  with_items:
+    #   - libibverbs-devel
+#
+- name: Create foss directory for software,modules,source
+  file: name='{{ item }}' state=directory owner={{ easybuild_user }}
+  with_items:
+        - "{{ prefix }}"
+        - "{{ prefix }}/{{ release }}"
+        - "{{ prefix }}/{{ release }}/software"
+        - "{{ prefix }}/{{ release }}/modules"
+        - "{{ prefix }}/{{ release }}/modules_hierarchical"
+        - "{{ prefix }}/{{ release }}/sources"
+        - "{{ prefix }}/{{ release }}/sources/eb_files"
+#
+# check if this is a standard eb config file or an handmade one
+#
+- name: Check if the eb file is a local file
+  stat:
+    path: "{{ ebconfig }}"
+  register: stat_result
+
+- name: move the local file in the robotpath
+  copy:
+      dest: "{{ prefix }}/{{ release }}/sources/eb_files/"
+      src: "{{ ebconfig }}"
+      owner: "{{ easybuild_user }}"
+  when: stat_result.stat.exists == true
+    #
+    # Running of the package 
+    #
+#
+- name: run the installation of the specific package
+  easybuild:
+        installpath_modules: '{{ prefix }}/{{ release }}/modules'
+        installpath_software: '{{ prefix }}/{{ release }}/software'
+        installpath_source: '{{ prefix_sources }}'
+        additional_options: '{{ eb_additional_options }}'
+        package: '{{ ebconfig }}'
+        search_eb: '{{ search_eb }}'
+        keep_std: true
+#        module_path: "{{ prefix }}/{{ release }}/modules/all/:{{EXTRAMODULEPATH}}"
+  become: yes
+  become_user: "{{ easybuild_user }}"
+  environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix }}/{{ release }}/modules/all/:{{EXTRAMODULEPATH}}"
+          TMPDIR: /scratch/localsoft
+#      notify: spidercache
+  tags:
+    - eb_single

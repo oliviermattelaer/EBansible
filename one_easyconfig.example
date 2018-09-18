@@ -1,0 +1,37 @@
+# Script to install a single easyconfigfile on the cluster
+# run with command:
+# ansible-playbook -i mbarchrepresent.in one_easyconfig.yml
+#
+### Description of the variable
+# release: easybuild release where to put the modules/... 
+#      example 2017b, 2018a, sticky_05062018
+# prefix: on which part mounting point this installation should be installed
+#      {{ prefix_eb }} -> use the /CECI
+#      {{ prefix_priv_eb }} -> use the /opt/sw # for local installation
+#            those variables are defined in the group_var/easybuild file
+#
+# ebconfig: name/path of the easyconfig file to install
+# search_eb: experimental. allow incomplete name of ebconfig and the script will install the latest available.
+
+#Optional argument:
+
+# eb_additional_options : to pass extra argument (usefull for dry-run)
+# EXTRAMODULEPATH: usefull for ELIC since it allows to keep module from the standard suite
+
+- hosts: arch_represent
+  roles:
+     - { role: easybuild_module, tags: ['foss', 'eb'] }
+#
+#    ADD BELOW a line with your configuration (should start with - { role: deploy_single,)
+#              please indicate in the file who added the line and when!
+#
+
+#    OM: 20/07
+#     - { role: deploy_single, release: '2017b', prefix: '{{ prefix_eb }}', ebconfig: 'CUDA-9.1.85.eb', search_eb: false}
+
+# OM 25/08 (asked by PYB)
+#     - { role: deploy_single, release: 'ELIC-2017b', prefix: '{{ prefix_priv_eb }}', ebconfig: './elic/netCDF-C++4-4.3.0-intel-2017b.eb', search_eb: false, EXTRAMODULEPATH: '/opt/cecisw/arch/easybuild/2017b/modules/all'}
+#, eb_additional_options: '-Dr'}
+#     - { role: deploy_single, release: 'ELIC-2017b', prefix: '{{ prefix_priv_eb }}', ebconfig: './elic/CDO-1.9.2-intel-2017b.eb', search_eb: false, EXTRAMODULEPATH: '/opt/cecisw/arch/easybuild/2017b/modules/all'}
+#     - { role: deploy_single, release: 'ELIC-2017b', prefix: '{{ prefix_priv_eb }}', ebconfig: './elic/NCO-4.7.1-intel-2017b.eb', search_eb: false, EXTRAMODULEPATH: '/opt/cecisw/arch/easybuild/2017b/modules/all'}
+

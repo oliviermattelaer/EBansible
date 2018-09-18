@@ -1,0 +1,5 @@
+SERVER intel-compiler-lic-one.sipr.ucl.ac.be 000000000000 27007
+SERVER intel-compiler-lic-two.sipr.ucl.ac.be 000000000000 27007
+SERVER intel-compiler-lic-three.sipr.ucl.ac.be 000000000000 27007
+USE_SERVER
+

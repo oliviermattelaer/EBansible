@@ -1,0 +1,10 @@
+#tasks:
+   #
+   # installing license and foss toolchain
+   #
+ 
+   - include: install_intel.yml
+     tags: ['intel_only']
+   - include: program_based_on_intel.yml
+     tags: ['intel_suite']
+

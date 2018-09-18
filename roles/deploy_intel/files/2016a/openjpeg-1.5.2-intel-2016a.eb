@@ -1,0 +1,35 @@
+easyblock = 'CMakeMake'
+
+name = 'openjpeg'
+version = '1.5.2'
+
+homepage = "http://www.openjpeg.org/"
+description = """OpenJPEG is an open-source JPEG 2000 codec written in C language. 
+ It has been developed in order to promote the use of JPEG 2000, a still-image 
+ compression standard from the Joint Photographic Experts Group (JPEG). 
+ Since may 2015, it is officially recognized by ISO/IEC and ITU-T as a JPEG 2000 
+ Reference Software."""
+
+toolchain = {'name': 'intel', 'version': '2016a'}
+
+source_urls = ["https://github.com/uclouvain/openjpeg/archive"]
+sources = ["version.%(version)s.tar.gz"]
+
+builddependencies = [
+    ('CMake', '3.5.2'),
+]
+
+configopts = '-DBUILD_SHARED_LIBS:bool=on'
+
+sanity_check_paths = {
+    'files': ['bin/j2k_dump', 'bin/image_to_j2k'],
+    'dirs': [],
+}
+
+postinstallcmds = [
+    'ln -s %(installdir)s/include/openjpeg-1.5/openjpeg.h %(installdir)s/include/openjpeg.h'
+]
+
+separate_build_dir = True
+
+moduleclass = 'lib'

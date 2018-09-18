@@ -1,0 +1,36 @@
+
+RUNNING THE SCRIPT
+==================
+
+step 1-4 can be skip, to update the version of foss (those have to be done only once).
+
+1) create a inventory with all the machine to consider (put all machine inside easybuild group)
+2) run:
+   $> ansible-playbook -i INVENTORY setup.yml
+3) MANUAL: create the symbolic link with the name of the machine that are missing
+   $> cd /CECI/soft/cecisw/
+   $> ln -s RedHat-6_16-8-1_Infiniband RedHat_6_MagnyCours_Infiniband
+4) create a new inventory with one machine for each type of cpu. 
+   from the information in ~soft/inventory.db [created in step 2]
+   $> mv INVENTORY ./INVENTORY.bk
+   $> ./create_inventory.py ~soft/inventory.db INVENTORY
+5) run 
+   $> ansible-playbook -i INVENTORY site.yml
+   Note that for RPM creation, the script need to install rvm which will be discover only in a new shell.
+   So in case of crash related to gem/fpm please disconnect/reconnect and retry.
+6) MANUAL: VALIDATION
+7) MANUAL: change (or create the symbolic link) default to the latest foss version
+
+Note: 
+The file ~soft/inventory.db is cumulative (machine previously added are kept in the next run)
+
+TODO LIST
+=========
+1) installation occurs in default directory should be done in the foss specific one 
+
+HMEM SPECIFIC PROBLEM
+=====================
+1) hmem18 and hmem19 does not have infiniband (that's fine) but consequently does not mount the /CECI/soft/cecisw/ path
+
+SOLUTION: 
+  remove hmem18 and hmem19 from the initial inventory.

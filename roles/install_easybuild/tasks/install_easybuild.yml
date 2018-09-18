@@ -1,0 +1,99 @@
+#
+# 
+#
+
+    # FIX ME ! (HMEM: fail to install pip from yum since pip more recent than yum version)
+    #
+    # Install pip
+    #
+    - name: Install PIP
+      package: name=python-pip
+      tags: easybuild_only
+
+    - name: install package for fpm
+      package: 
+          name: "{{ item }}" 
+          state: latest
+      with_items:
+        - ruby-devel
+        - gcc
+        - curl
+        - libyaml-devel
+        - python-devel
+        - libffi-devel
+        - git
+            
+    #- name: install gc3pie
+    #  pip: name=gc3pie
+
+    #- name: install gem
+    #  script: ./install_gem.sh creates="/usr/local/rvm/rubies/ruby-1.9.3-p551/bin/gem"
+
+    #- name: Install fpm via gem
+    #  gem: name=fpm
+
+    - name: install package for hidden dependency
+      package: 
+          name: "{{ item }}" 
+          state: latest
+      with_items:
+        - libX11-devel.x86_64
+        - mesa-libGLU-devel
+        - libGL-devel
+      tags:
+        - easybuild_only
+    # 
+    # Setup the various directory needed for the installation of easybuild
+    # 
+    # first those with soft account:
+
+    - name: Create directory for software,modules,source
+      file: name={{ item }} state=directory owner={{ easybuild_user }} mode=01777
+      with_items:
+        - "{{prefix_eb}}"
+#        - "{{ prefix_foss }}"
+#        - "{{ prefix_foss}}/software"
+#        - "{{ prefix_foss }}/modules"
+#        - "{{ prefix_foss }}/sources"
+        - "{{ easybuild_home }}"
+        - "{{ easybuild_home }}/.config"
+        - "{{ easybuild_home }}/.config/easybuild"
+      tags: easybuild_only 
+    # second with root account
+
+    - name: Create directory for global configuration of easybuild (/etc/easybuil.d)
+      file: name="/etc/easybuild.d" state=directory owner=root
+      tags: easybuild_only 
+    
+    #
+    # launch the installation of easybuild
+    #
+
+    - name: Install easybuild via pip
+      pip: name=easybuild version={{ ebversion }}
+      tags: easybuild_only 
+    
+    #
+    # setup the configuration of easybuild
+    #
+
+    - name: Create configuration file (config.cfg)
+      template: dest={{ easybuild_home }}/.config/easybuild/config.cfg src=config.cfg
+      tags: easybuild_only  
+
+    - name: Create global configuration file (/etc/easybuild.d/config.cfg)
+      template: dest=/etc/easybuild.d/config.cfg src=config_user.cfg
+      tags: easybuild_only     
+    - stat: path=/etc/profile.d/new_modules.sh
+      register: stat_result
+    #- name: Starting point for the modulepath for lmod
+    #  copy: dest=/etc/profile.d/new_modules.sh src={{ item }}
+    #  with_items:
+    #     - "new_modules.sh"
+    
+    #
+    #
+    #- name: check that subdir is found in the path
+    #  lineinfile: name="/etc/profile.d/new_modules.sh" line="export MODULEPATHFULL=$MODULEPATHFULL:{{ prefix_eb }}/{{ subdir }}/modules/all" create=yes
+
+     

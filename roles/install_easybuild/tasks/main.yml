@@ -1,0 +1,12 @@
+#---
+#tasks:
+
+   #
+   # run the installation/setup of easybuild
+   #   
+   - include: install_lmod.yml
+     tags:
+       - lmod
+   - include: install_easybuild.yml
+     tags:
+       - easybuild

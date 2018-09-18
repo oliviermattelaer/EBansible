@@ -1,0 +1,13 @@
+
+- hosts: easybuild
+  roles:
+     - easybuild_module
+     - { role: install_easybuild, ebversion: '3.6.1', tags: ['easybuild', 'eb']}
+
+- hosts: arch_represent
+  roles:
+     - { role: easybuild_module, tags: ['foss', 'eb'] }
+     - { role: deploy_foss, foss: '2017b', tags: ['foss']}
+     - { role: deploy_intel, intel: '2017b', tags: ['intel']}
+     - { role: deploy_sticky, stikyrel: '20180601', tags: ['sticky']}
+

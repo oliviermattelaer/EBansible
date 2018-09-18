@@ -1,0 +1,21 @@
+# easyconfig file for SCIP 5.0.1
+
+easyblock = 'CMakeMake'
+
+name = 'scip'
+version = '5.0.1'
+
+homepage = 'http://scip.zib.de/'
+description = "non-commercial solvers for mixed integer programming (MIP) and mixed integer nonlinear programming (MINLP)."
+
+toolchain = {'name': 'foss', 'version': '2017b'}
+
+source_urls = ['http://scip.zib.de/download.php?fname=']
+sources = ['scipoptsuite-%(version)s.tgz']
+checksums = ['56071392f5cc2a85cd995758cd90af25']
+
+#skipsteps = ['configure']
+
+builddependencies = [('CMake', '3.9.5')]
+
+parallel = 1

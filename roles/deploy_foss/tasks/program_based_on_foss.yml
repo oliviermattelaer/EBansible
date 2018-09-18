@@ -1,0 +1,147 @@
+
+    - name: copy eb file
+      copy: dest="{{ prefix_eb }}/{{ foss }}/sources/eb_files" src={{ foss }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "{{ foss }}/*.eb"
+#      tags:
+#        - foss_manual
+          
+    - name: install python27
+      easybuild:
+        installpath_modules: '{{ prefix_eb }}/{{ foss }}/modules'
+        installpath_software: '{{ prefix_eb }}/{{ foss }}/software'
+        installpath_source: '{{ prefix_eb }}/sources'
+        keep_std: yes 
+        search_eb: 'True'
+        search_package: "Python"
+        search_toolchain: "foss,{{ foss }}"
+        search_version: "2.7.*"
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ foss }}/modules/all"
+      notify: spidercache
+
+ #   - name: Create source for java
+ #     file: name={{ item }} state=directory owner={{ easybuild_user }}
+ #     with_items:
+ #       - "{{ prefix_eb }}/sources/j/"
+ #       - "{{ prefix_eb }}/sources/j/Java/"
+
+#    - name: copy file for the java sdk
+#      copy: dest="{{ prefix_eb }}/sources/j/Java/" src={{ item }}  owner={{ easybuild_user }}
+#      with_fileglob:
+#        - "jdk-*-linux-x64.tar.gz"
+#      tags:
+#        - MCR
+
+    - name: copy file for the sparsehash program
+      copy: dest="{{ prefix_eb }}/sources/s/sparsehash/" src={{ item }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "sparsehash-*.tar.gz"
+
+    - name: copy file for the libpng library
+      copy: dest="{{ prefix_eb }}/sources/l/libpng/" src={{ item }}  owner={{ easybuild_user }}
+      with_fileglob:
+        - "libpng-*.tar.gz"
+
+    - name: run special package
+      easybuild:
+           installpath_modules: '{{ prefix_private }}//arch/easybuild//{{ foss }}/modules'
+           installpath_software: '{{ prefix_private }}//arch/easybuild//{{ foss }}/software'
+           robot: yes
+           installpath_source: '{{ prefix_eb }}/sources'
+           keep_std: yes 
+           search_eb: 'True'
+           search_package: "{{ item }}"
+           search_toolchain: "foss,{{ foss }}"
+           strict_search: "{{ strict_search}}"
+           additional_options: '--ignore-checksums'
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ foss }}/modules/all"
+      notify: spidercache
+      with_items:
+         - scip
+      tags:
+         - foss_manual
+
+    - name: run special package
+      easybuild:
+           package: 'FLUENT-18.2.eb'
+           installpath_modules: '{{ prefix_private }}//arch/easybuild//{{ foss }}/modules'
+           installpath_software: '{{ prefix_private }}//arch/easybuild//{{ foss }}/software'
+           robot: yes
+           installpath_source: '{{prefix_sources}}'
+           keep_std: yes 
+           search_eb: 'False'
+#           additional_options: '--package --packagepath={{ prefix_eb }}/sources'
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ foss }}/modules/all"
+      notify: spidercache
+      tags:
+         - foss_manual
+
+
+         
+    - name: run the installation of program depending of foss   
+      easybuild:
+           installpath_modules: '{{ prefix_eb }}/{{ foss }}/modules'
+           installpath_software: '{{ prefix_eb }}/{{ foss }}/software'
+           installpath_source: '{{ prefix_eb }}/sources'
+           keep_std: yes 
+           search_eb: 'True'
+           search_package: "{{ item }}"
+           search_toolchain: "foss,{{ foss }}"
+           strict_search: "{{ strict_search}}"
+#           additional_options: '--package --packagepath={{ prefix_eb }}/sources'
+      become: yes
+      become_user: "{{ easybuild_user }}"
+      environment:
+          PATH: "{{ ansible_env.PATH }}:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/opt/apps/lmod/lmod/libexec/:/root/bin"
+          MODULEPATH: "{{ prefix_eb }}/{{ foss }}/modules/all"
+      notify: spidercache
+      with_items:
+         - libspatialite
+         - Qgis
+         - ABINIT
+         - Tcl
+         - Python
+#         - hwloc
+         - GROMACS
+         - RepastHPC 
+         - DMTCP
+         - Boost
+         - bzip2
+         - CMake
+         - cURL
+         - Doxygen
+         - expat
+         - GDAL
+         - GMP
+         - HDF5
+         - libjpeg-turbo
+         - libpng
+         - libreadline
+         - LibTIFF
+         - libxml2
+         - NASM
+         - ncurses
+         - PCRE
+         - PROJ
+         - Qhull
+         - R
+         - SAMtools
+         - sparsehash
+         - SQLite
+         - Stacks
+#         - SuperLU
+         - Szip
+         - XZ
+         - OpenFOAM

@@ -1,0 +1,28 @@
+PACKAGE IBDB034BC INTEL 2017.1231 23602F0AD21C COMPONENTS="AdvXEl \
+    ArBBL CCompL Comp-CL Comp-DCAF Comp-FL Comp-OpenMP \
+    Comp-PointerChecker DAAL-L DbgL FCompL IClsTktL IClsValL \
+    ITrAnlL ITrAnlW ITrColL MKernL MPassL PerfAnl PerfPrimL \
+    StaticAnlL ThreadAnlGui ThreadBB" OPTIONS=SUITE ck=79 \
+    SIGN=F50F78ACE306
+INCREMENT IBDB034BC INTEL 2017.1231 31-dec-2017 uncounted \
+    CFFA3B041B7A VENDOR_STRING="SUPPORT=COM \
+    https://registrationcenter.intel.com" HOSTID=ID=00065549 \
+    PLATFORMS="i86_n i86_r i86_re it64_lr it64_re amd64_re i86_mac \
+    x64_mac" ck=174 SN=SMSAR2PWJ6LV TS_OK SIGN=0D53D524CC40
+PACKAGE IBDB034BC INTEL 2017.1231 23602F0AD21C COMPONENTS="AdvXEl \
+    ArBBL CCompL Comp-CL Comp-DCAF Comp-FL Comp-OpenMP \
+    Comp-PointerChecker DAAL-L DbgL FCompL IClsTktL IClsValL \
+    ITrAnlL ITrAnlW ITrColL MKernL MPassL PerfAnl PerfPrimL \
+    StaticAnlL ThreadAnlGui ThreadBB" OPTIONS=SUITE ck=79 \
+    SIGN=F50F78ACE306
+INCREMENT IBDB034BC INTEL 2017.1231 31-dec-2017 uncounted \
+    310DCC7DCB61 VENDOR_STRING="SUPPORT=COM \
+    https://registrationcenter.intel.com" HOSTID=ID=00065549 \
+    PLATFORMS="i86_n i86_r i86_re it64_lr it64_re amd64_re i86_mac \
+    x64_mac" ck=107 SN=SMSAR2PWJ6LV SIGN=4A32B544568A
+#
+# SerialNumber=C9TX-R2PWJ6LV
+#
+#
+# SerialNumber=C9TX-R2PWJ6LV
+#
