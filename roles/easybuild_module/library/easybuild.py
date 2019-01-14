@@ -73,8 +73,9 @@ import subprocess
 from ansible.module_utils.basic import AnsibleModule
 
 # to allow to use easybuild as an API, you need to do something like
-# from easybuild.tests.framework.utilities import init_config
-# init_config()
+import easybuild
+from easybuild.tools.options import set_up_configuration; 
+set_up_configuration(silent=True)
 
 def run_module():
     # define the available arguments/parameters that a user can pass to
@@ -235,8 +236,11 @@ def run_module():
     if not buildpath: #and softpath:
         import socket
         hostname = socket.gethostname() 
-        buildpath = os.path.join('/home/localsoft/build/', hostname.split('.')[0])    
+        softhome = os.path.expanduser('~soft')
+        buildpath = os.path.join(softhome,'build', hostname.split('.')[0])    
         if not os.path.exists(buildpath):
+            if not os.path.exists(os.path.join(softhome, 'build')):
+                os.mkdir(os.path.join(softhome, 'build'))
             os.mkdir(buildpath)
     #
     # Build the easybuild command
@@ -528,7 +532,7 @@ def edit_openmpi_for_slurm(params):
     for line in open(openmpi_eb_orig_path):
         out.write(line)
         if line.strip().startswith(('configopts=', 'configopts =')):
-            out.write("configopts += \'--with-slurm --with-pmi=/usr/ --with-pmi-libdir=/usr \'\n") 
+            out.write("configopts += \'--with-slurm --with-pmi=/usr/ --with-pmi-libdir=/usr/lib64 \'\n") 
             done +=1
 
     if done == 1:
