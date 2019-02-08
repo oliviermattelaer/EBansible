@@ -2,6 +2,7 @@
 
 import os 
 import re
+import time
 from distutils.version import LooseVersion
 
 ANSIBLE_METADATA = {
@@ -75,6 +76,7 @@ from ansible.module_utils.basic import AnsibleModule
 # to allow to use easybuild as an API, you need to do something like
 import easybuild
 from easybuild.tools.options import set_up_configuration; 
+os.chdir('/tmp')
 set_up_configuration(silent=True)
 
 def run_module():
@@ -100,6 +102,9 @@ def run_module():
         strict_search=dict(type='bool', required=False, default=False),
         special_edit=dict(type='str', required=False, default=''),
         special_edit_parameters=dict(type='str', required=False, default=''),
+        # handling of the cluster
+        use_cluster=dict(type='bool', required=False, default=True),
+        fetch=dict(type='bool', required=False, default=False),
 #        module_path=dict(type='str', required=False, default=''),
         )
 
@@ -192,31 +197,24 @@ def run_module():
         mod_name = mod_name.rsplit('/',1)[1]
     mod_name = mod_name.split("-",1)
 
-    #now that we have the tuple for the path check if such path exists
-    #print os.path.join(modpath, *mod_name), '->',os.path.exists(os.path.join(modpath, *mod_name))
-    if not (os.path.exists(os.path.join(modpath, *mod_name)) or
-            os.path.exists(os.path.join(modpath, 'all' , *mod_name))):
-        result['changed'] = True
-        if ans_module.check_mode:
-            result['message'] = 'module file does not exists'
-    else:
-        ans_module.exit_json(**result)
-    #
-    # Test for the TODO
-    #    
-        # method fail (fail to find how to initialize EasyBuild config 
-        #import easybuild.tools.modules as modules
-        #import easybuild.tools.config as config
-        #config.build_option()
+    import easybuild.tools.modules as modules
+    #import easybuild.tools.config as config
+    #config.build_option()
         #config.init_build_options()
-        ##print modules.get_modules_tool() #-> return only none since EasyBuild config not correctly initialize
-        #modhandler = modules.modules_tool(mod_paths=os.environ['MODULEPATH'])
-        #if not modhandler:
-        #
-        #    ans_module.fail_json(msg='Fail to get a module handler', **result)
-        #if not modhandler.exist(ans_module_name):
-        #    result['changed'] = True
-
+    if 'MODULEPATH' in os.environ:
+        paths = os.environ['MODULEPATH']
+        paths = ans_module.params['installpath_modules'] + "/all:" + paths
+    else:
+        paths=''
+        paths = ans_module.params['installpath_modules'] + "/all"
+    modhandler = modules.modules_tool(mod_paths=paths.split(':'))
+    if not modhandler:
+        ans_module.fail_json(msg='Fail to get a module handler', **result)
+    elif not modhandler.exist(['/'.join(mod_name)])[0]:
+        result['changed'] = True
+    else :
+        result['message'] = 'module already installed:', str(modhandler.exist(['/'.join(mod_name)]))
+        result['log'] = '/'.join(mod_name)
 
     if force_eb and result['changed'] == False:
         result['changed'] = True
@@ -232,6 +230,7 @@ def run_module():
     buildpath = ans_module.params['buildpath']  
 
     keep_std = ans_module.params['keep_std']
+    use_fetch = ans_module.params['fetch']
 
     if not buildpath: #and softpath:
         import socket
@@ -242,10 +241,32 @@ def run_module():
             if not os.path.exists(os.path.join(softhome, 'build')):
                 os.mkdir(os.path.join(softhome, 'build'))
             os.mkdir(buildpath)
+    
+    use_cluster = ans_module.params['use_cluster']
+    if use_cluster:
+        #
+        # use the constraint of slurm to get the name
+        #
+        import socket
+        hostname = socket.gethostname().split('.')[0]
+        command = ['sinfo', '-o','%n,%f']
+        j = subprocess.Popen(command, stdout=subprocess.PIPE)
+        (stdout, _) = j.communicate()
+        for line in stdout.split('\n'):
+            if hostname in line:
+                feature = line.split(',',1)[1]
+                break
+        myenv = os.environ.copy()
+        myenv["SBATCH_CONSTRAINT"] = feature
+        myenv["SBATCH_PARTITION"] = "batch,debug"
+        command = ['eb', '--job' , '--job-backend=Slurm', '--job-max-walltime=6']
+    else:
+        myenv = os.environ
+        command = ['eb']
+
     #
     # Build the easybuild command
     #    
-    command = ['eb']
     command.append(eb_name)
     if robot:
         command.append('--robot=%s/../sources/eb_files:%s/../sources/eb_files' % (modpath, modpath.replace('/sw/','/cecisw/')))
@@ -258,19 +279,20 @@ def run_module():
         command.append('--sourcepath=%s' % instpath)
     if buildpath:
         command.append('--buildpath=%s' % buildpath)
+    if fetch:
+        command.append('--fetch')
     if otherargs:
         command += otherargs.split()
+
 
     #
     # store the eb command for debugging/documentation 
     # 
     result['eb_command'] = ' '.join(command)
-    
-    print ' '.join(command)
-    print 'check mode for ans_module', [ans_module.check_mode]
+
+
     # if the user is working with this module in only check mode we do not
     # want to make any changes. So return here
-    #print result
     if ans_module.check_mode:
         result['changed']=False
         print result
@@ -283,9 +305,9 @@ def run_module():
     # run easybuild
     #
    
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=myenv)
 
-
+        
     stdout = p.stdout.read()
     stderr = p.stderr.read()
     result['returncode'] = str(p.returncode)
@@ -299,6 +321,22 @@ def run_module():
     elif keep_std:
         result['stdout'] = stdout
         result['stderr'] = stderr
+
+    if use_cluster:
+        while 1:
+            time.sleep(60)
+            username = os.environ.get('USER')
+            command = ['squeue', '-u %s' % username,  '-t PENDING', '-o \"%j %f\"']
+            p = subprocess.Popen(' '.join(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=myenv, shell=True)
+            stdout = p.stdout.read()
+            prog_name = os.path.basename(eb_name).split('.')[0]
+            check_feature = feature.replace(',', '&')
+            for line in stdout.split('\n'):
+                if check_feature in line and prog_name in line:
+                    break
+            else:
+                break
+        
 
     #
     # run for the hierachical scheme
@@ -316,7 +354,7 @@ def run_module():
         if '--package' in command:
             command.remove('--package')
 
-        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=myenv)
         stdout = p.stdout.read()
         stderr = p.stderr.read()
         result['returncode'] = str(p.returncode)
